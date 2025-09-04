@@ -70,3 +70,14 @@ public class WarehouseServiceImplJpa implements WarehouseService {
         return warehouseList;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
