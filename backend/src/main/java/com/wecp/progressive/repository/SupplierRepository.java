@@ -1,16 +1,25 @@
 
 package com.wecp.progressive.repository;
 
-
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
-
 import com.wecp.progressive.entity.Supplier;
 
-public interface SupplierRepository extends JpaRepository<Supplier, Integer>{
+import javax.transaction.Transactional;
 
-    Supplier deleteBySupplierId(@Param("supplierId") int supplier_id);
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface SupplierRepository extends JpaRepository<Supplier, Integer> {
+
+    // @Modifying
+    // @Transactional
+    void deleteBySupplierId(@Param("supplierId") int supplierId);
+
     Supplier findBySupplierId(@Param("supplierId") int supplierId);
-    
+
+    Supplier findByUsername(String username);
+
+    Supplier findByEmail(String email);
 }
