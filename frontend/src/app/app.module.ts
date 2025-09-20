@@ -1,27 +1,27 @@
 
-import { NgModule } from "@angular/core";
-import { CommonModule } from "@angular/common";
-
-import { SupplyLinkRoutingModule } from "./supplylink-routing.module";
-import { ReactiveFormsModule } from "@angular/forms";
-import { HttpClientModule } from "@angular/common/http";
-import { ProductComponent } from "./components/product/product.component";
-import { SupplierComponent } from "./components/supplier/supplier.component";
-import { WarehouseComponent } from "./components/warehouse/warehouse.component";
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';  
+import { AuthInterceptor } from './auth.interceptors';
 
 @NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    SupplyLinkRoutingModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-    ProductComponent,
-    SupplierComponent,
-    WarehouseComponent
+  declarations: [
+    AppComponent
   ],
-  exports: [
-    
-  ]
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    AppRoutingModule
+  ],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
+  ],
+  bootstrap: [AppComponent]
 })
-export class SupplyLinkModule {}
+export class AppModule {}
