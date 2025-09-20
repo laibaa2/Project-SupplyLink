@@ -1,19 +1,27 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http';
-import { AppComponent } from './app.component';
-import { AppRoutingModule } from './app-routing.module';  
+
+import { NgModule } from "@angular/core";
+import { CommonModule } from "@angular/common";
+
+import { SupplyLinkRoutingModule } from "./supplylink-routing.module";
+import { ReactiveFormsModule } from "@angular/forms";
+import { HttpClientModule } from "@angular/common/http";
+import { ProductComponent } from "./components/product/product.component";
+import { SupplierComponent } from "./components/supplier/supplier.component";
+import { WarehouseComponent } from "./components/warehouse/warehouse.component";
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
+  declarations: [],
   imports: [
-    BrowserModule,
+    CommonModule,
+    SupplyLinkRoutingModule,
+    ReactiveFormsModule,
     HttpClientModule,
-    AppRoutingModule 
+    ProductComponent,
+    SupplierComponent,
+    WarehouseComponent
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  exports: [
+    
+  ]
 })
-export class AppModule {}
+export class SupplyLinkModule {}
