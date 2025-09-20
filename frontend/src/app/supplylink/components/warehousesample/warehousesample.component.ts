@@ -10,5 +10,5 @@ import { Warehouse } from '../../types/Warehouse';
   styleUrls: ['./warehousesample.component.css']
 })
 export class WarehouseSampleComponent {
-  warehouse: Warehouse = new Warehouse(1, '12', 'Flamingo', 'Nevada', 1000);
+
 }
