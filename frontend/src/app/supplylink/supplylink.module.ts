@@ -15,10 +15,7 @@ import { WarehouseComponent } from "./components/warehouse/warehouse.component";
     CommonModule,
     SupplyLinkRoutingModule,
     ReactiveFormsModule,
-    HttpClientModule,
-    ProductComponent,
-    SupplierComponent,
-    WarehouseComponent
+    HttpClientModule
   ],
   exports: [
     
