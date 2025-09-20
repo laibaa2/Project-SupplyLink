@@ -13,7 +13,7 @@ public interface WarehouseService {
 
     List<Warehouse> getWarehousesSortedByCapacity() throws SQLException;
 
-    default public void emptyArrayList() throws SQLException {
+    default public void emptyArrayList() {
     }
 
     //Do not implement these methods in WarehouseServiceImplArraylist.java class
