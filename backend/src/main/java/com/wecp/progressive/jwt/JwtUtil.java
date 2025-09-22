@@ -2,84 +2,68 @@
 package com.wecp.progressive.jwt;
 
 
-import com.wecp.progressive.entity.Supplier;
-import com.wecp.progressive.repository.SupplierRepository;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collection;
 
 @Component
-public class JwtUtil {
-
-    private SupplierRepository supplierRepository;
+public class JwtRequestFilter extends OncePerRequestFilter {
+    private final UserDetailsService userDetailsService;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public JwtUtil(SupplierRepository supplierRepository) {
-        this.supplierRepository = supplierRepository;
+    public JwtRequestFilter(UserDetailsService userDetailsService, JwtUtil jwtUtil) {
+        this.userDetailsService = userDetailsService;
+        this.jwtUtil = jwtUtil;
     }
 
-    private final String secret = "secretKey000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        final String authorizationHeader = request.getHeader("Authorization");
 
-    private final int expiration = 86400;
+        String username = null;
+        String jwt = null;
 
-    public String generateToken(String username) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration * 1000);
-        Supplier user = supplierRepository.findByUsername(username);
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", username);
-
-        // Assign role based on user type
-        claims.put("role", user.getRole());
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, secret)
-                .compact();
-    }
-
-    public Claims extractAllClaims(String token) {
-        Claims claims;
-        try {
-            claims = Jwts.parser()
-                    .setSigningKey(secret)
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            claims = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            jwt = authorizationHeader.substring(7);
+            try {
+                username = jwtUtil.extractUsername(jwt);
+            } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException |
+                     SignatureException | IllegalArgumentException e) {
+                // Handle invalid tokens here if needed
+            }
         }
-        return claims;
-    }
 
-    public String extractUsername(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.getSubject();
-    }
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-    public boolean isTokenExpired(String token) {
-        Date expirationDate = Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
-        return expirationDate.before(new Date());
-    }
+            if (jwtUtil.validateToken(jwt, userDetails)) {
+                Claims claims = jwtUtil.extractAllClaims(jwt);
+                Collection<? extends GrantedAuthority> authorities =
+                        AuthorityUtils.createAuthorityList((String) claims.get("role"));
 
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        }
+
+        filterChain.doFilter(request, response);
     }
 }
