@@ -1,4 +1,3 @@
-
 package com.wecp.progressive.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
