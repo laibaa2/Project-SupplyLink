@@ -1,7 +1,9 @@
 package com.wecp.progressive.controller;
 
-import com.wecp.progressive.entity.Shipment;
-import com.wecp.progressive.service.impl.ShipmentServiceImpl;
+import com.wecp.progressive.entity.Product;
+import com.wecp.progressive.exception.InsufficientCapacityException;
+import com.wecp.progressive.exception.SupplierDoesNotExistException;
+import com.wecp.progressive.service.impl.ProductServiceImplJpa;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,24 +13,24 @@ import java.sql.SQLException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/shipment")
-public class ShipmentController {
+@RequestMapping("/product")
+public class ProductController {
 
     @Autowired
-    ShipmentServiceImpl shipmentService;
+    ProductServiceImplJpa productServiceImplJpa;
 
     @GetMapping
-    public ResponseEntity<List<Shipment>> getAllShipments() throws SQLException {
-        List<Shipment> shipments = shipmentService.getAllShipments();
-        return new ResponseEntity<>(shipments, HttpStatus.OK);
+    public ResponseEntity<List<Product>> getAllProducts() throws SQLException {
+        List<Product> products = productServiceImplJpa.getAllProducts();
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
-    @GetMapping("/{shipmentId}")
-    public ResponseEntity<Shipment> getShipmentById(@PathVariable int shipmentId) {
+    @GetMapping("/{productId}")
+    public ResponseEntity<Product> getProductById(@PathVariable int productId) {
         try {
-            Shipment shipment = shipmentService.getShipmentById(shipmentId);
-            if (shipment != null) {
-                return new ResponseEntity<>(shipment, HttpStatus.OK);
+            Product product = productServiceImplJpa.getProductById(productId);
+            if (product != null) {
+                return new ResponseEntity<>(product, HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
@@ -38,33 +40,42 @@ public class ShipmentController {
     }
 
     @PostMapping
-    public ResponseEntity<Integer> addShipment(@RequestBody Shipment shipment) {
+    public ResponseEntity<?> addProduct(@RequestBody Product product) {
         try {
-            int shipmentId = shipmentService.addShipment(shipment);
-            return new ResponseEntity<>(shipmentId, HttpStatus.CREATED);
-        } catch (SQLException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            int productId = productServiceImplJpa.addProduct(product);
+            return new ResponseEntity<>(productId, HttpStatus.CREATED);
+        } catch (InsufficientCapacityException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            // Return a generic error message for any other exceptions
+            return new ResponseEntity<>("An unexpected error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PutMapping("/{shipmentId}")
-    public ResponseEntity<Void> updateShipment(@PathVariable int shipmentId, @RequestBody Shipment shipment) {
+    @PutMapping("/{productId}")
+    public ResponseEntity<Void> updateProduct(@PathVariable int productId, @RequestBody Product product) {
         try {
-            shipment.setShipmentId(shipmentId);
-            shipmentService.updateShipment(shipment);
+            product.setProductId(productId);
+            productServiceImplJpa.updateProduct(product);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (SQLException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @DeleteMapping("/{shipmentId}")
-    public ResponseEntity<Void> deleteShipment(@PathVariable int shipmentId) {
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable int productId) {
         try {
-            shipmentService.deleteShipment(shipmentId);
+            productServiceImplJpa.deleteProduct(productId);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (SQLException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/warehouse/{warehouseId}")
+    public ResponseEntity<List<Product>> getAllProductByWarehouse(@PathVariable int warehouseId) throws SQLException {
+        List<Product> products = productServiceImplJpa.getAllProductByWarehouse(warehouseId);
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
 }
